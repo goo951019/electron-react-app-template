@@ -25,7 +25,7 @@ function createWindow(){
     }
 
     if(!isDev){
-        autoUpdater.setFeedURL({ provider: 'github', owner: 'goo951019', repo: 'electron-react-app', token: process.env.GITHUB_ACCESS_KEY })
+        autoUpdater.setFeedURL({ provider: 'github', owner: 'goo951019', repo: 'electron-react-app', private: true, token: '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' })
         autoUpdater.checkForUpdates();
     }
 
@@ -57,11 +57,10 @@ autoUpdater.on("update-available", (_event, releaseNotes, releaseName) => {
         message: process.platform === 'win32' ? releaseNotes : releaseName,
         detail: 'A new version is being downloaded.'
     }
-    dialog.showMessageBox(dialogOptions, (response) => {
-
-    })
+    dialog.showMessageBox(dialogOptions, (response) => { })
 });
 
+autoUpdater.on("update-not-available", () => { log.info("Update not available.");});
 autoUpdater.on("download-progress", (progressTrack) => { log.info("Downloading..."+progressTrack); })
 
 autoUpdater.on("update-downloaded", (_event, releaseNotes, releaseName) => {
