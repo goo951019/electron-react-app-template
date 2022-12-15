@@ -1,7 +1,11 @@
 const { app, BrowserWindow, dialog } = require("electron");
 const { autoUpdater } = require("electron-updater");
+const log = require('electron-log');
 const path = require("path");
 const isDev = require("electron-is-dev");
+
+log.transports.file.resolvePath = () => isDev ? `./logs/dev.log` : path.join(app.getPath("userData"), "./logs/prod.log");
+log.log("App Version: "+app.getVersion());
 
 let mainWindow;
 
@@ -17,10 +21,11 @@ function createWindow(){
     mainWindow.loadURL(isDev ? "http://localhost:3000": `file://${path.join(__dirname, "../build/index.html")}`);
 
     if(isDev){
-        window.webContents.openDevTools({mode: "detach"});
+        mainWindow.webContents.openDevTools({mode: "detach"});
     }
 
     if(!isDev){
+        autoUpdater.setFeedURL({ provider: 'github', owner: 'goo951019', repo: 'electron-react-app', token: process.env.GITHUB_ACCESS_KEY })
         autoUpdater.checkForUpdates();
     }
 
@@ -41,7 +46,10 @@ app.on("activate", () => {
     }
 });
 
+autoUpdater.on("checking-for-update", () => { log.info("Checking for an update..."); })
+
 autoUpdater.on("update-available", (_event, releaseNotes, releaseName) => {
+    log.info("Update Available!");
     const dialogOptions = {
         type: "info",
         buttons: ['OK'],
@@ -54,7 +62,10 @@ autoUpdater.on("update-available", (_event, releaseNotes, releaseName) => {
     })
 });
 
+autoUpdater.on("download-progress", (progressTrack) => { log.info("Downloading..."+progressTrack); })
+
 autoUpdater.on("update-downloaded", (_event, releaseNotes, releaseName) => {
+    log.info("Update Downloaded.");
     const dialogOptions = {
         type: "info",
         buttons: ['Restart', 'Later'],
@@ -66,3 +77,5 @@ autoUpdater.on("update-downloaded", (_event, releaseNotes, releaseName) => {
         if(returnValue.response === 0) autoUpdater.quitAndInstall();
     })
 });
+
+autoUpdater.on("error", (err) => {log.info("Update Error: "+ err)})
